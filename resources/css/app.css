@@ -1,0 +1,175 @@
+@import url('https://fonts.bunny.net/css?family=inter:400,500,600,700,800|space-grotesk:500,700');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        @apply scroll-smooth;
+    }
+
+    body {
+        @apply bg-[#060b17] text-slate-100 antialiased;
+        font-family: 'Inter', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .bg-app {
+        background: linear-gradient(180deg, rgba(20, 26, 43, 0.96) 0px, rgba(6, 11, 23, 1) 68px), #060b17;
+    }
+
+    .bg-panel {
+        @apply bg-[#151d2d];
+    }
+
+    .brand-mark {
+        @apply text-[1rem] font-extrabold tracking-tight text-white sm:text-[1.05rem];
+        background: linear-gradient(90deg, #8ea0ff 0%, #7c5cff 45%, #b9a7ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .panel-shell {
+        @apply rounded-2xl border border-white/10 bg-[#151d2d] shadow-[0_18px_40px_rgba(0,0,0,0.28)];
+    }
+
+    .summary-card {
+        @apply flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#151d2d] px-4 py-4 shadow-[0_16px_32px_rgba(0,0,0,0.22)] sm:px-5 sm:py-5;
+    }
+
+    .summary-label {
+        @apply text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500;
+    }
+
+    .summary-value {
+        @apply mt-1.5 text-[1.8rem] font-extrabold tracking-tight text-white sm:text-[2rem];
+    }
+
+    .summary-caption {
+        @apply mt-1.5 text-xs text-slate-400 sm:text-sm;
+    }
+
+    .summary-icon-shell {
+        @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-300 sm:h-14 sm:w-14;
+    }
+
+    .summary-icon {
+        @apply h-6 w-6 sm:h-7 sm:w-7;
+    }
+
+    .section-title {
+        @apply text-[1.45rem] font-bold uppercase tracking-tight text-white sm:text-[1.65rem];
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center rounded-xl border border-[#6247ff] bg-[#5b45f7] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(91,69,247,0.35)] transition hover:bg-[#6a56ff] focus:outline-none focus:ring-2 focus:ring-[#836fff]/60;
+    }
+
+    .btn-compact {
+        @apply px-4 py-2.5 text-sm;
+    }
+
+    .btn-text {
+        @apply inline-flex items-center justify-center px-2 py-2 text-sm font-medium text-slate-500 transition hover:text-slate-200;
+    }
+
+    .btn-danger-outline {
+        @apply inline-flex items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-400 transition hover:bg-red-500/20;
+    }
+
+    .filter-label,
+    .field-label {
+        @apply mb-2 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500;
+    }
+
+    .date-filter-group {
+        @apply flex flex-col gap-1;
+    }
+
+    .date-shell {
+        @apply flex items-center rounded-xl border border-white/10 bg-[#232d42] px-4 py-3 shadow-inner shadow-black/10;
+    }
+
+    .date-input {
+        @apply w-full rounded-xl border border-white/10 bg-[#232d42] px-4 py-3 text-sm font-medium text-slate-100 outline-none placeholder:text-slate-500 focus:border-[#6c5cff];
+    }
+
+    .date-input-native {
+        color-scheme: dark;
+    }
+
+    .date-input-native::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        filter: invert(0.9) brightness(0.95);
+        opacity: 0.85;
+    }
+
+    .input-dark,
+    .textarea-dark,
+    .select-dark {
+        @apply w-full rounded-xl border border-white/10 bg-[#232d42] px-4 py-3 text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:border-[#6c5cff] focus:outline-none;
+    }
+
+    .textarea-dark {
+        @apply min-h-[108px] resize-y;
+    }
+
+    .worksheet-table {
+        @apply w-full table-fixed border-collapse;
+    }
+
+    .worksheet-head {
+        @apply border-b border-white/10 px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-4;
+    }
+
+    .worksheet-row {
+        @apply border-b border-white/10 transition hover:bg-white/[0.02];
+    }
+
+    .worksheet-cell {
+        @apply px-3 py-2 align-top sm:px-4;
+    }
+
+    .date-display {
+        @apply text-[10px] font-medium leading-4 text-[#7b8cac] sm:text-[11px];
+    }
+
+    .tag-pill {
+        @apply rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-4 sm:px-2;
+    }
+
+    .checkbox-dark {
+        @apply h-4 w-4 rounded border-white/10 bg-[#0b1220] text-[#6c5cff] focus:ring-[#6c5cff];
+    }
+
+    .item-card {
+        @apply rounded-2xl border border-white/10 bg-[#182133] px-4 py-4 text-left transition hover:border-white/20 hover:bg-[#1b263a];
+    }
+
+    .item-card-active {
+        @apply border-[#6c5cff]/50 bg-[#1d2440] shadow-[0_0_0_1px_rgba(108,92,255,0.2)];
+    }
+
+    .selection-dot {
+        @apply mt-1 h-4 w-4 rounded-full border border-white/10 bg-transparent;
+    }
+
+    .selection-dot-active {
+        @apply border-[#6c5cff] bg-[#6c5cff];
+        box-shadow: 0 0 0 4px rgba(108, 92, 255, 0.12);
+    }
+
+}
