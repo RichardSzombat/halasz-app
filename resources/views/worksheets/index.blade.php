@@ -72,7 +72,7 @@
                                 <option value="name_desc" @selected($sortKey === 'name_desc')>Munkalap szerint, Z-A</option>
                             </select>
 
-                            <button type="submit" formaction="{{ route('worksheets.export') }}" class="btn-text sm:self-end">Export XLS</button>
+                            <button type="submit" formaction="{{ route('worksheets.export') }}" class="btn-accent btn-compact sm:self-end">Export XLS</button>
                             <button type="submit" class="btn-primary btn-compact sm:self-end">Szűrés</button>
                         </div>
                     </form>
@@ -88,9 +88,9 @@
                 <div class="overflow-hidden">
                     <table class="worksheet-table">
                         <colgroup>
-                            <col class="w-[92px] sm:w-[108px]">
+                            <col class="w-[58px] sm:w-[108px]">
                             <col>
-                            <col class="w-[84px] sm:w-[108px]">
+                            <col class="w-[76px] sm:w-[108px]">
                         </colgroup>
 
                         <thead>
@@ -114,17 +114,21 @@
                                                 <input type="checkbox" class="checkbox-dark" :value="{{ $worksheet->id }}" x-model="selectedIds" x-on:click.stop>
                                             </div>
 
-                                            <span class="date-display">{{ $worksheet->work_date->format('Y.m.d') }}</span>
+                                            <div class="date-display">
+                                                <span class="block sm:hidden">{{ $worksheet->work_date->format('Y') }}</span>
+                                                <span class="block sm:hidden">{{ $worksheet->work_date->format('m.d') }}</span>
+                                                <span class="hidden sm:inline">{{ $worksheet->work_date->format('Y.m.d') }}</span>
+                                            </div>
                                         </div>
                                     </td>
 
                                     <td class="worksheet-cell align-top">
                                         <div class="min-w-0 space-y-1">
-                                            <div class="break-words text-[12px] font-semibold leading-4 text-white sm:text-[13px]">{{ $worksheet->worksheet_number }}</div>
+                                            <div class="truncate text-[11px] font-semibold leading-4 text-white sm:text-[13px] sm:whitespace-normal sm:break-words">{{ $worksheet->worksheet_number }}</div>
 
                                             <div class="flex flex-wrap items-center gap-1 text-[10px] leading-4 text-slate-400">
                                                 @foreach ($worksheet->items as $item)
-                                                    <span class="tag-pill {{ $tagPalette[$item->item_name_at_time] ?? '' }}">{{ $item->item_name_at_time }}</span>
+                                                    <span class="tag-pill" style="{{ $tagPalette[$item->item_name_at_time] ?? '' }}">{{ $item->item_name_at_time }}</span>
                                                 @endforeach
 
                                                 @if ($worksheet->note)

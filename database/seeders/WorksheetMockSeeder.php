@@ -4,13 +4,16 @@ namespace Database\Seeders;
 
 use App\Models\BillableItem;
 use App\Models\Worksheet;
+use App\Support\BillableItemCatalog;
 use Illuminate\Database\Seeder;
 
 class WorksheetMockSeeder extends Seeder
 {
     public function run(): void
     {
-        $billableItems = BillableItem::query()->orderBy('id')->get();
+        $billableItems = BillableItem::query()
+            ->orderByRaw(BillableItemCatalog::orderBySql('name'))
+            ->get();
 
         if ($billableItems->isEmpty()) {
             return;

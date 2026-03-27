@@ -6,35 +6,30 @@ use App\Models\Worksheet;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet as SpreadsheetWorksheet;
 
-class WorksheetsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithStyles
+class WorksheetsExport implements FromCollection, ShouldAutoSize, WithStyles
 {
     public function __construct(
         private readonly Collection $worksheets,
         private readonly int $rangeTotal,
+        private readonly string $userName,
+        private readonly string $rangeLabel,
     ) {
-    }
-
-    public function headings(): array
-    {
-        return [
-            'Dátum',
-            'Munkalapneve',
-            'Tételek',
-            'Megjegyzés',
-            'Összeg',
-        ];
     }
 
     public function collection(): Collection
     {
-        return $this->worksheets
+        return collect([
+            [$this->userName],
+            ["Elszámolás {$this->rangeLabel}"],
+            [''],
+            ['Dátum', 'Munkalapneve', 'Tételek', 'Megjegyzés', 'Összeg'],
+        ])->concat($this->worksheets
             ->map(function (Worksheet $worksheet): array {
                 return [
-                    $worksheet->work_date?->format('Y-m-d'),
+                    $worksheet->work_date?->format('Y.m.d.'),
                     $worksheet->worksheet_number,
                     $worksheet->items->pluck('item_name_at_time')->filter()->implode(' + '),
                     $worksheet->note ?? '',
@@ -47,15 +42,17 @@ class WorksheetsExport implements FromCollection, ShouldAutoSize, WithHeadings, 
                 '',
                 'Kiválasztott időszak bevétele',
                 number_format($this->rangeTotal, 0, ',', ' ') . ' Ft',
-            ]);
+            ]));
     }
 
     public function styles(SpreadsheetWorksheet $sheet): array
     {
-        $summaryRow = $this->worksheets->count() + 2;
+        $summaryRow = $this->worksheets->count() + 5;
 
         return [
-            1 => ['font' => ['bold' => true]],
+            1 => ['font' => ['bold' => true, 'size' => 13]],
+            2 => ['font' => ['bold' => true]],
+            4 => ['font' => ['bold' => true]],
             $summaryRow => ['font' => ['bold' => true]],
         ];
     }

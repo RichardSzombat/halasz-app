@@ -78,6 +78,10 @@
         @apply inline-flex items-center justify-center rounded-xl border border-[#6247ff] bg-[#5b45f7] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(91,69,247,0.35)] transition hover:bg-[#6a56ff] focus:outline-none focus:ring-2 focus:ring-[#836fff]/60;
     }
 
+    .btn-accent {
+        @apply inline-flex items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_10px_24px_rgba(6,182,212,0.32)] transition hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-300/60;
+    }
+
     .btn-compact {
         @apply px-4 py-2.5 text-sm;
     }
@@ -148,7 +152,20 @@
     }
 
     .tag-pill {
-        @apply rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-4 sm:px-2;
+        @apply rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-4 shadow-sm sm:px-2;
+    }
+
+    .auth-divider {
+        @apply relative my-2 flex items-center justify-center;
+    }
+
+    .auth-divider::before {
+        content: '';
+        @apply absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/10;
+    }
+
+    .auth-divider span {
+        @apply relative z-10 bg-[#151d2d] px-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500;
     }
 
     .checkbox-dark {

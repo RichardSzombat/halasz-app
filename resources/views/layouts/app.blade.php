@@ -10,10 +10,21 @@
         <div class="min-h-screen bg-app">
             <header class="sticky top-0 z-40 border-b border-white/5 bg-panel/90 backdrop-blur-xl">
                 <div class="mx-auto flex w-full max-w-[1320px] items-center justify-between px-6 py-4">
-                    <a href="{{ route('worksheets.index') }}" class="brand-mark">HalaszApp</a>
+                    <a href="{{ auth()->check() ? route('worksheets.index') : route('login') }}" class="brand-mark">HalaszApp</a>
 
                     <div class="flex items-center gap-3">
                         @yield('headerActions')
+
+                        @auth
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-medium text-slate-400">{{ auth()->user()->name }}</span>
+
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="btn-text">Kilépés</button>
+                                </form>
+                            </div>
+                        @endauth
                     </div>
                 </div>
             </header>

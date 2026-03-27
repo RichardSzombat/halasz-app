@@ -64,7 +64,12 @@ class WorksheetController extends Controller
             : $this->calculator->calculateMonthlyTotal();
 
         return Excel::download(
-            new WorksheetsExport($worksheets, $rangeTotal),
+            new WorksheetsExport(
+                $worksheets,
+                $rangeTotal,
+                (string) $request->user()?->name,
+                $this->buildRangeLabel($filters['from'], $filters['to'])
+            ),
             $this->buildExportFilename($filters['from'], $filters['to']),
             ExcelFormat::XLS
         );
@@ -153,7 +158,9 @@ class WorksheetController extends Controller
         BillableItemCatalog::ensureSeeded();
 
         $worksheet->loadMissing(['items.billableItem']);
-        $billableItems = BillableItem::query()->orderBy('name')->get();
+        $billableItems = BillableItem::query()
+            ->orderByRaw(BillableItemCatalog::orderBySql('name'))
+            ->get();
         $selectedItems = $worksheet->items
             ->map(fn (WorksheetItem $item) => [
                 'worksheet_item_id' => $item->id,
@@ -233,8 +240,18 @@ class WorksheetController extends Controller
 
     private function extractFilters(Request $request): array
     {
+        $today = now()->toDateString();
         $fromInput = $request->string('from')->trim()->toString();
         $toInput = $request->string('to')->trim()->toString();
+
+        if ($fromInput === '') {
+            $fromInput = $today;
+        }
+
+        if ($toInput === '') {
+            $toInput = $today;
+        }
+
         $from = $this->parseDateInput($fromInput);
         $to = $this->parseDateInput($toInput);
 
@@ -246,8 +263,8 @@ class WorksheetController extends Controller
         return [
             'from' => $from?->toDateString(),
             'to' => $to?->toDateString(),
-            'from_display' => $fromInput !== '' ? $fromInput : null,
-            'to_display' => $toInput !== '' ? $toInput : null,
+            'from_display' => $fromInput,
+            'to_display' => $toInput,
         ];
     }
 
@@ -281,13 +298,13 @@ class WorksheetController extends Controller
     private function buildRangeLabel(?string $from, ?string $to): string
     {
         if (! $from && ! $to) {
-            return 'Aktuális havi bevétel';
+            return now()->locale('hu')->translatedFormat('Y. F');
         }
 
-        $start = $from ? Carbon::parse($from)->format('Y. m. d.') : 'kezdettől';
-        $end = $to ? Carbon::parse($to)->format('Y. m. d.') : 'ma';
+        $start = $from ? Carbon::parse($from)->format('Y.m.d.') : Carbon::now()->format('Y.m.d.');
+        $end = $to ? Carbon::parse($to)->format('Y.m.d.') : Carbon::now()->format('Y.m.d.');
 
-        return "{$start} - {$end}";
+        return "{$start}-{$end}";
     }
 
     private function collectItemNames(Collection $worksheets): array

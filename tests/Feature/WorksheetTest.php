@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Exports\WorksheetsExport;
 use App\Models\BillableItem;
+use App\Models\User;
 use App\Models\Worksheet;
 use Database\Seeders\BillableItemSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,6 +19,7 @@ class WorksheetTest extends TestCase
     {
         $this->withoutVite();
         $this->seed(BillableItemSeeder::class);
+        $this->actingAs(User::factory()->create());
 
         $response = $this->get(route('worksheets.create'));
 
@@ -28,9 +30,33 @@ class WorksheetTest extends TestCase
         $response->assertSee('max="'.now()->toDateString().'"', false);
     }
 
+    public function test_create_page_shows_billable_items_in_expected_order(): void
+    {
+        $this->withoutVite();
+        $this->seed(BillableItemSeeder::class);
+        $this->actingAs(User::factory()->create());
+
+        $response = $this->get(route('worksheets.create'));
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'Install',
+            'Módosítás',
+            'Hibajavítás',
+            'Szelfinstall',
+            'Kötés',
+            'UTP',
+            'IP+',
+            'Sűrítés 10m&gt;',
+            'Sűrítés 10m&lt;',
+            'Vételi hely',
+        ], false);
+    }
+
     public function test_edit_page_uses_separate_delete_form_to_avoid_nested_form_submission(): void
     {
         $this->withoutVite();
+        $this->actingAs(User::factory()->create());
         $worksheet = Worksheet::query()->create([
             'worksheet_number' => 'TESZT-SZERK-01',
             'work_date' => '2026-03-27',
@@ -48,6 +74,7 @@ class WorksheetTest extends TestCase
     {
         $this->withoutVite();
         $this->seed(BillableItemSeeder::class);
+        $this->actingAs(User::factory()->create());
 
         $response = $this->get(route('worksheets.index'));
 
@@ -56,12 +83,40 @@ class WorksheetTest extends TestCase
         $response->assertSee('id="to"', false);
         $response->assertSee('type="date"', false);
         $response->assertSee('max="'.now()->toDateString().'"', false);
+        $response->assertSee('value="'.now()->toDateString().'"', false);
+        $response->assertSee(now()->format('Y.m.d.').'-'.now()->format('Y.m.d.'));
+    }
+
+    public function test_index_defaults_to_today_only_records(): void
+    {
+        $this->withoutVite();
+        $this->seed(BillableItemSeeder::class);
+        $this->actingAs(User::factory()->create());
+
+        Worksheet::query()->create([
+            'worksheet_number' => 'MAI-MUNKALAP',
+            'work_date' => now()->toDateString(),
+            'note' => 'Mai',
+        ]);
+
+        Worksheet::query()->create([
+            'worksheet_number' => 'REGI-MUNKALAP',
+            'work_date' => now()->subDay()->toDateString(),
+            'note' => 'Régi',
+        ]);
+
+        $response = $this->get(route('worksheets.index'));
+
+        $response->assertOk();
+        $response->assertSee('MAI-MUNKALAP');
+        $response->assertDontSee('REGI-MUNKALAP');
     }
 
     public function test_user_can_create_worksheet_with_multiple_distinct_items(): void
     {
         $this->withoutVite();
         $this->seed(BillableItemSeeder::class);
+        $this->actingAs(User::factory()->create());
 
         $items = BillableItem::query()->take(2)->get();
 
@@ -103,6 +158,7 @@ class WorksheetTest extends TestCase
     {
         $this->withoutVite();
         $this->seed(BillableItemSeeder::class);
+        $this->actingAs(User::factory()->create());
 
         $items = BillableItem::query()->take(3)->get();
         $worksheet = Worksheet::query()->create([
@@ -162,6 +218,8 @@ class WorksheetTest extends TestCase
     {
         $this->withoutVite();
         $this->seed(BillableItemSeeder::class);
+        $user = User::factory()->create(['name' => 'Teszt Felhasználó']);
+        $this->actingAs($user);
         Excel::fake();
 
         $install = BillableItem::query()->where('name', 'Install')->firstOrFail();
@@ -210,10 +268,57 @@ class WorksheetTest extends TestCase
             $rows = $export->collection();
             $exportedItems = $rows->pluck(2)->filter()->values()->all();
 
-            return $rows->count() === 3
+            return $rows->count() === 7
+                && $rows[0][0] === 'Teszt Felhasználó'
+                && $rows[1][0] === 'Elszámolás 2026.03.25.-2026.03.26.'
                 && in_array('Install + Vételi hely', $exportedItems, true)
-                && $rows[2][3] === 'Kiválasztott időszak bevétele'
-                && $rows[2][4] === '11 400 Ft';
+                && $rows[3][0] === 'Dátum'
+                && $rows[6][3] === 'Kiválasztott időszak bevétele'
+                && $rows[6][4] === '11 400 Ft';
         });
+    }
+
+    public function test_guest_is_redirected_to_login_page_from_worksheets(): void
+    {
+        $response = $this->get(route('worksheets.index'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_login_page_contains_registration_call_to_action(): void
+    {
+        $response = $this->get(route('login'));
+
+        $response->assertOk();
+        $response->assertSee('Bejelentkezés');
+        $response->assertSee('Nincs még fiókod?');
+        $response->assertSee(route('register'));
+    }
+
+    public function test_register_page_contains_login_call_to_action(): void
+    {
+        $response = $this->get(route('register'));
+
+        $response->assertOk();
+        $response->assertSee('Regisztráció');
+        $response->assertSee('Már van fiókod?');
+        $response->assertSee(route('login'));
+    }
+
+    public function test_user_can_register_and_is_logged_in(): void
+    {
+        $response = $this->post(route('register.store'), [
+            'name' => 'Új Felhasználó',
+            'email' => 'uj@example.com',
+            'password' => 'titkosjelszo',
+            'password_confirmation' => 'titkosjelszo',
+        ]);
+
+        $response->assertRedirect(route('worksheets.index'));
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'uj@example.com',
+            'name' => 'Új Felhasználó',
+        ]);
     }
 }

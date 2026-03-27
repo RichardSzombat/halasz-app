@@ -5,28 +5,30 @@ namespace App\Support;
 class BillableItemTagPalette
 {
     private const FIXED_MAP = [
-        'install' => 'bg-cyan-500/80 text-white border-cyan-300/20',
-        'hibajavítás' => 'bg-emerald-500/80 text-white border-emerald-300/20',
-        'szelfinstall' => 'bg-amber-500/85 text-slate-950 border-amber-200/30',
-        'kötés' => 'bg-fuchsia-500/80 text-white border-fuchsia-300/20',
-        'utp' => 'bg-sky-500/80 text-white border-sky-300/20',
-        'sűrítés 10m>' => 'bg-lime-500/85 text-slate-950 border-lime-200/30',
-        'sűrítés 10m<' => 'bg-rose-500/80 text-white border-rose-300/20',
-        'vételi hely' => 'bg-violet-500/80 text-white border-violet-300/20',
+        'install' => 'background-color:#0891b2;color:#ffffff;border-color:#67e8f9;',
+        'módosítás' => 'background-color:#2563eb;color:#ffffff;border-color:#93c5fd;',
+        'hibajavítás' => 'background-color:#059669;color:#ffffff;border-color:#6ee7b7;',
+        'szelfinstall' => 'background-color:#d97706;color:#fff7ed;border-color:#fcd34d;',
+        'kötés' => 'background-color:#c026d3;color:#ffffff;border-color:#f0abfc;',
+        'utp' => 'background-color:#0284c7;color:#ffffff;border-color:#7dd3fc;',
+        'ip+' => 'background-color:#475569;color:#ffffff;border-color:#cbd5e1;',
+        'sűrítés 10m>' => 'background-color:#65a30d;color:#f7fee7;border-color:#bef264;',
+        'sűrítés 10m<' => 'background-color:#e11d48;color:#ffffff;border-color:#fda4af;',
+        'vételi hely' => 'background-color:#7c3aed;color:#ffffff;border-color:#c4b5fd;',
     ];
 
     private const PALETTE = [
-        'bg-cyan-500/80 text-white border-cyan-300/20',
-        'bg-emerald-500/80 text-white border-emerald-300/20',
-        'bg-amber-500/85 text-slate-950 border-amber-200/30',
-        'bg-fuchsia-500/80 text-white border-fuchsia-300/20',
-        'bg-sky-500/80 text-white border-sky-300/20',
-        'bg-lime-500/85 text-slate-950 border-lime-200/30',
-        'bg-rose-500/80 text-white border-rose-300/20',
-        'bg-violet-500/80 text-white border-violet-300/20',
+        'background-color:#0891b2;color:#ffffff;border-color:#67e8f9;',
+        'background-color:#059669;color:#ffffff;border-color:#6ee7b7;',
+        'background-color:#d97706;color:#fff7ed;border-color:#fcd34d;',
+        'background-color:#c026d3;color:#ffffff;border-color:#f0abfc;',
+        'background-color:#0284c7;color:#ffffff;border-color:#7dd3fc;',
+        'background-color:#65a30d;color:#f7fee7;border-color:#bef264;',
+        'background-color:#e11d48;color:#ffffff;border-color:#fda4af;',
+        'background-color:#7c3aed;color:#ffffff;border-color:#c4b5fd;',
     ];
 
-    public static function classesFor(string $name): string
+    public static function styleFor(string $name): string
     {
         $normalized = mb_strtolower(trim($name));
 
@@ -48,7 +50,7 @@ class BillableItemTagPalette
                 continue;
             }
 
-            $map[$name] = self::classesFor($name);
+            $map[$name] = self::styleFor($name);
         }
 
         return $map;
