@@ -7,8 +7,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
-        <div class="min-h-screen bg-app">
-            <header class="sticky top-0 z-40 border-b border-white/5 bg-panel/90 backdrop-blur-xl">
+        <div class="app-shell bg-app">
+            <header class="app-header">
                 <div class="mx-auto flex w-full max-w-[1320px] items-center justify-between px-6 py-4">
                     <a href="{{ auth()->check() ? route('worksheets.index') : route('login') }}" class="brand-mark">HalaszApp</a>
 
@@ -29,10 +29,14 @@
                 </div>
             </header>
 
-            <main class="mx-auto w-full max-w-[1320px] px-5 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <main class="mx-auto w-full max-w-[1320px] flex-1 px-5 py-6 sm:px-6 sm:py-8 lg:px-8">
                 @include('worksheets.partials.flash')
                 @yield('content')
             </main>
+
+            <footer class="border-t border-white/5 px-6 py-6 text-center text-sm text-slate-500">
+                Created with 💜 by StRicsike <b>THE MAN</b>
+            </footer>
         </div>
     </body>
 </html>

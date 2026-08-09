@@ -6,6 +6,12 @@ use App\Models\BillableItem;
 
 class BillableItemCatalog
 {
+    private const QUANTITY_ENABLED_NAMES = [
+        'UTP',
+        'IP+',
+        'Vételi hely',
+    ];
+
     public static function defaults(): array
     {
         return [
@@ -25,6 +31,16 @@ class BillableItemCatalog
     public static function orderedNames(): array
     {
         return array_column(self::defaults(), 'name');
+    }
+
+    public static function quantityEnabledNames(): array
+    {
+        return self::QUANTITY_ENABLED_NAMES;
+    }
+
+    public static function allowsMultipleQuantity(string $name): bool
+    {
+        return in_array($name, self::QUANTITY_ENABLED_NAMES, true);
     }
 
     public static function orderBySql(string $column = 'name'): string

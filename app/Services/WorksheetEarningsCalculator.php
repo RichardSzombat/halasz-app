@@ -48,7 +48,10 @@ class WorksheetEarningsCalculator
 
     private function buildTotalQuery()
     {
+        $userId = auth()->id();
+
         return Worksheet::query()
+            ->when($userId, fn ($query, $userId) => $query->where('worksheets.user_id', $userId))
             ->leftJoin('worksheet_items', 'worksheet_items.worksheet_id', '=', 'worksheets.id')
             ->selectRaw('COALESCE(SUM(worksheet_items.price_at_time * worksheet_items.quantity), 0) as total');
     }

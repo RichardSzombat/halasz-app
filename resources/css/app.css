@@ -6,7 +6,7 @@
 
 @layer base {
     html {
-        @apply scroll-smooth;
+        scroll-behavior: smooth;
     }
 
     body {
@@ -31,8 +31,21 @@
         background: linear-gradient(180deg, rgba(20, 26, 43, 0.96) 0px, rgba(6, 11, 23, 1) 68px), #060b17;
     }
 
+    .app-shell {
+        min-height: 100vh;
+        min-height: 100svh;
+        @apply flex flex-col overflow-x-clip;
+        overscroll-behavior-y: contain;
+    }
+
     .bg-panel {
         @apply bg-[#151d2d];
+    }
+
+    .app-header {
+        @apply sticky top-0 z-40 border-b border-white/5 bg-[#151d2d]/90;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
     }
 
     .brand-mark {
@@ -86,6 +99,10 @@
         @apply px-4 py-2.5 text-sm;
     }
 
+    .btn-mobile-tight {
+        @apply min-h-[44px] px-3 py-2.5 text-[13px] sm:min-h-0 sm:px-4 sm:py-2.5 sm:text-sm;
+    }
+
     .btn-text {
         @apply inline-flex items-center justify-center px-2 py-2 text-sm font-medium text-slate-500 transition hover:text-slate-200;
     }
@@ -103,22 +120,57 @@
         @apply flex flex-col gap-1;
     }
 
+    .filter-form-layout {
+        @apply flex min-w-0 flex-col gap-2.5;
+    }
+
+    .filter-date-grid {
+        @apply grid min-w-0 grid-cols-2 gap-2;
+    }
+
+    .filter-date-group {
+        @apply min-w-0;
+    }
+
+    .filter-actions-grid {
+        @apply grid min-w-0 grid-cols-2 gap-2;
+    }
+
+    .filter-sort-select {
+        @apply col-span-2 w-full;
+    }
+
+    .filter-action-button {
+        @apply w-full max-w-[9.5rem];
+    }
+
+    .filter-action-button-mobile {
+        max-width: none;
+    }
+
     .date-shell {
         @apply flex items-center rounded-xl border border-white/10 bg-[#232d42] px-4 py-3 shadow-inner shadow-black/10;
     }
 
-    .date-input {
-        @apply w-full rounded-xl border border-white/10 bg-[#232d42] px-4 py-3 text-sm font-medium text-slate-100 outline-none placeholder:text-slate-500 focus:border-[#6c5cff];
+    .date-picker-shell {
+        @apply relative flex min-h-[44px] w-full items-center rounded-xl border border-white/10 bg-[#232d42] px-3 py-2.5 text-[12px] font-medium text-slate-100 shadow-inner shadow-black/10 sm:min-h-[48px] sm:px-4 sm:py-3 sm:text-sm;
     }
 
-    .date-input-native {
+    .date-picker-value {
+        @apply block min-w-0 flex-1 truncate pr-8 text-slate-100;
+    }
+
+    .date-picker-icon {
+        @apply pointer-events-none absolute right-3 h-4 w-4 text-slate-500 sm:right-4;
+    }
+
+    .date-input-overlay {
+        @apply absolute inset-0 h-full w-full cursor-pointer rounded-xl opacity-0;
         color-scheme: dark;
     }
 
-    .date-input-native::-webkit-calendar-picker-indicator {
-        cursor: pointer;
-        filter: invert(0.9) brightness(0.95);
-        opacity: 0.85;
+    .date-input-overlay::-webkit-calendar-picker-indicator {
+        @apply absolute right-0 h-full w-10 cursor-pointer opacity-0;
     }
 
     .input-dark,
@@ -127,8 +179,20 @@
         @apply w-full rounded-xl border border-white/10 bg-[#232d42] px-4 py-3 text-sm font-medium text-slate-100 placeholder:text-slate-500 focus:border-[#6c5cff] focus:outline-none;
     }
 
+    .input-compact {
+        @apply px-3 py-2.5 text-[12px] sm:px-4 sm:py-3 sm:text-sm;
+    }
+
     .textarea-dark {
         @apply min-h-[108px] resize-y;
+    }
+
+    .quantity-input-dark {
+        @apply h-10 w-24 rounded-xl border border-white/10 bg-[#232d42] px-3 text-sm font-semibold text-slate-100 focus:border-[#6c5cff] focus:outline-none;
+    }
+
+    .custom-item-card {
+        @apply rounded-2xl border border-[#6c5cff]/50 bg-[#1d2440] p-4 shadow-[0_0_0_1px_rgba(108,92,255,0.2)];
     }
 
     .worksheet-table {
@@ -136,7 +200,7 @@
     }
 
     .worksheet-head {
-        @apply border-b border-white/10 px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:px-4;
+        @apply border-b border-white/10 px-2 py-2 text-left text-[8px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:px-4 sm:text-[8px] sm:tracking-[0.18em];
     }
 
     .worksheet-row {
@@ -144,15 +208,20 @@
     }
 
     .worksheet-cell {
-        @apply px-3 py-2 align-top sm:px-4;
+        @apply px-2 py-2 align-top sm:px-4;
     }
 
     .date-display {
-        @apply text-[10px] font-medium leading-4 text-[#7b8cac] sm:text-[11px];
+        @apply text-[9px] font-medium leading-tight text-[#7b8cac] sm:text-[11px] sm:leading-4;
     }
 
     .tag-pill {
-        @apply rounded-full border px-1.5 py-0.5 text-[9px] font-semibold leading-4 shadow-sm sm:px-2;
+        @apply rounded-full border px-1 py-0.5 text-[8px] font-semibold leading-tight shadow-sm sm:px-2 sm:text-[9px] sm:leading-4;
+    }
+
+    .toast-surface {
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
     }
 
     .auth-divider {
@@ -189,4 +258,59 @@
         box-shadow: 0 0 0 4px rgba(108, 92, 255, 0.12);
     }
 
+}
+
+@media (hover: none), (pointer: coarse) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .app-header,
+    .toast-surface {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .btn-primary,
+    .btn-accent,
+    .btn-text,
+    .btn-danger-outline,
+    .worksheet-row,
+    .item-card {
+        transition: none;
+    }
+}
+
+@media (min-width: 980px) {
+    .filter-form-layout {
+        @apply flex-row items-end justify-between;
+    }
+
+    .filter-date-grid {
+        @apply flex-1 justify-start;
+        grid-template-columns: repeat(2, minmax(0, 23rem));
+    }
+
+    .filter-date-group {
+        max-width: 23rem;
+    }
+
+    .filter-actions-grid {
+        grid-template-columns: minmax(0, 12.5rem) minmax(0, 7rem) minmax(0, 7rem);
+        align-items: end;
+        width: auto;
+    }
+
+    .filter-sort-select {
+        max-width: 12.5rem;
+        grid-column: span 1 / span 1;
+    }
+
+    .filter-action-button {
+        max-width: 7rem;
+    }
+
+    .filter-action-button-mobile {
+        max-width: 7rem;
+    }
 }

@@ -16,8 +16,7 @@ class WorksheetsExport implements FromCollection, ShouldAutoSize, WithStyles
         private readonly int $rangeTotal,
         private readonly string $userName,
         private readonly string $rangeLabel,
-    ) {
-    }
+    ) {}
 
     public function collection(): Collection
     {
@@ -31,9 +30,14 @@ class WorksheetsExport implements FromCollection, ShouldAutoSize, WithStyles
                 return [
                     $worksheet->work_date?->format('Y.m.d.'),
                     $worksheet->worksheet_number,
-                    $worksheet->items->pluck('item_name_at_time')->filter()->implode(' + '),
+                    $worksheet->items
+                        ->map(fn ($item): string => $item->quantity > 1
+                            ? "{$item->item_name_at_time} x{$item->quantity}"
+                            : $item->item_name_at_time)
+                        ->filter()
+                        ->implode(' + '),
                     $worksheet->note ?? '',
-                    number_format((int) $worksheet->getAttribute('calculated_total'), 0, ',', ' ') . ' Ft',
+                    number_format((int) $worksheet->getAttribute('calculated_total'), 0, ',', ' ').' Ft',
                 ];
             })
             ->push([
@@ -41,7 +45,7 @@ class WorksheetsExport implements FromCollection, ShouldAutoSize, WithStyles
                 '',
                 '',
                 'Kiválasztott időszak bevétele',
-                number_format($this->rangeTotal, 0, ',', ' ') . ' Ft',
+                number_format($this->rangeTotal, 0, ',', ' ').' Ft',
             ]));
     }
 

@@ -17,16 +17,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelFormat;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class WorksheetController extends Controller
 {
     public function __construct(
         private readonly WorksheetEarningsCalculator $calculator,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): View
     {
@@ -38,11 +37,14 @@ class WorksheetController extends Controller
 
         return view('worksheets.index', [
             'worksheets' => $worksheets,
-            'rangeTotal' => $filters['from'] || $filters['to']
+            'rangeTotal' => $filters['has_active_filter']
                 ? $this->calculator->calculateRangeTotal($filters['from'], $filters['to'])
                 : $this->calculator->calculateMonthlyTotal(),
             'dailyTotal' => $this->calculator->calculateDailyTotal(),
-            'activeRangeLabel' => $this->buildRangeLabel($filters['from'], $filters['to']),
+            'activeRangeLabel' => $this->buildRangeLabel(
+                $filters['has_active_filter'] ? $filters['from'] : null,
+                $filters['has_active_filter'] ? $filters['to'] : null,
+            ),
             'filters' => $filters,
             'filterInputs' => [
                 'from' => $filters['from_display'] ?? $today,
@@ -77,32 +79,38 @@ class WorksheetController extends Controller
 
     public function create(Request $request): View
     {
-        return view('worksheets.create', $this->formViewData(new Worksheet(), 'create', $request));
+        return view('worksheets.create', $this->formViewData(new Worksheet, 'create', $request));
     }
 
     public function store(StoreWorksheetRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request): void {
-            $worksheet = Worksheet::create($request->safe()->only([
-                'worksheet_number',
-                'work_date',
-                'note',
-            ]));
+            $worksheet = Worksheet::create([
+                ...$request->safe()->only([
+                    'worksheet_number',
+                    'work_date',
+                    'note',
+                ]),
+                'user_id' => $request->user()->id,
+            ]);
 
             $this->syncWorksheetItems($worksheet, collect($request->validated('items')));
         });
 
         return redirect($this->resolveRedirectTarget($request))
-            ->with('status', 'A munkalap sikeresen létrejött.');
+            ->with('status', 'Munkalap létrehozva.');
     }
 
     public function show(Worksheet $worksheet): RedirectResponse
     {
+        $this->ensureOwnedByCurrentUser($worksheet);
+
         return redirect()->route('worksheets.edit', $worksheet);
     }
 
     public function edit(Request $request, Worksheet $worksheet): View
     {
+        $this->ensureOwnedByCurrentUser($worksheet);
         $worksheet->load(['items.billableItem']);
 
         return view('worksheets.edit', $this->formViewData($worksheet, 'edit', $request));
@@ -110,6 +118,8 @@ class WorksheetController extends Controller
 
     public function update(UpdateWorksheetRequest $request, Worksheet $worksheet): RedirectResponse
     {
+        $this->ensureOwnedByCurrentUser($worksheet);
+
         DB::transaction(function () use ($request, $worksheet): void {
             $worksheet->update($request->safe()->only([
                 'worksheet_number',
@@ -121,15 +131,16 @@ class WorksheetController extends Controller
         });
 
         return redirect($this->resolveRedirectTarget($request))
-            ->with('status', 'A munkalap sikeresen frissült.');
+            ->with('status', 'Munkalap frissítve.');
     }
 
     public function destroy(Request $request, Worksheet $worksheet): RedirectResponse
     {
+        $this->ensureOwnedByCurrentUser($worksheet);
         $worksheet->delete();
 
         return redirect($this->resolveRedirectTarget($request))
-            ->with('status', 'A munkalap törölve lett.');
+            ->with('status', 'Munkalap törölve.');
     }
 
     public function bulkDelete(Request $request): RedirectResponse
@@ -140,6 +151,7 @@ class WorksheetController extends Controller
         ]);
 
         Worksheet::query()
+            ->where('user_id', $request->user()->id)
             ->whereIn('id', $validated['worksheet_ids'])
             ->delete();
 
@@ -161,13 +173,24 @@ class WorksheetController extends Controller
         $billableItems = BillableItem::query()
             ->orderByRaw(BillableItemCatalog::orderBySql('name'))
             ->get();
+        $billableItemOptions = $billableItems
+            ->map(fn (BillableItem $item): array => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => $item->price,
+                'allows_quantity' => BillableItemCatalog::allowsMultipleQuantity($item->name),
+            ])
+            ->values();
         $selectedItems = $worksheet->items
             ->map(fn (WorksheetItem $item) => [
                 'worksheet_item_id' => $item->id,
                 'billable_item_id' => $item->billable_item_id,
-                'quantity' => 1,
+                'type' => $item->billable_item_id ? 'catalog' : 'custom',
+                'quantity' => $item->quantity,
                 'snapshot_name' => $item->item_name_at_time,
                 'snapshot_price' => $item->price_at_time,
+                'custom_name' => $item->billable_item_id ? null : $item->item_name_at_time,
+                'custom_price' => $item->billable_item_id ? null : $item->price_at_time,
             ])
             ->values()
             ->all();
@@ -175,6 +198,7 @@ class WorksheetController extends Controller
         return [
             'worksheet' => $worksheet,
             'billableItems' => $billableItems,
+            'billableItemOptions' => $billableItemOptions,
             'selectedItems' => old('items', $selectedItems),
             'mode' => $mode,
             'workDateInput' => old(
@@ -188,40 +212,86 @@ class WorksheetController extends Controller
 
     private function syncWorksheetItems(Worksheet $worksheet, Collection $items): void
     {
-        $existingItems = $worksheet->items()->get()->keyBy('billable_item_id');
-        $selectedBillableIds = [];
+        $existingCatalogItems = $worksheet->items()
+            ->whereNotNull('billable_item_id')
+            ->get()
+            ->keyBy('billable_item_id');
+        $existingCustomItems = $worksheet->items()
+            ->whereNull('billable_item_id')
+            ->get()
+            ->keyBy('id');
+        $keptItemIds = [];
+        $handledBillableIds = [];
 
         foreach ($items as $itemData) {
             if (! is_array($itemData)) {
                 continue;
             }
 
-            $billableItemId = (int) $itemData['billable_item_id'];
-            $selectedBillableIds[] = $billableItemId;
-            $existingItem = $existingItems->get($billableItemId);
+            if (($itemData['type'] ?? null) === 'custom') {
+                $existingItem = $existingCustomItems->get((int) ($itemData['worksheet_item_id'] ?? 0));
 
-            if ($existingItem instanceof WorksheetItem) {
-                $existingItem->update([
-                    'quantity' => 1,
+                if ($existingItem instanceof WorksheetItem) {
+                    $existingItem->update([
+                        'item_name_at_time' => trim((string) $itemData['custom_name']),
+                        'price_at_time' => (int) $itemData['custom_price'],
+                        'quantity' => (int) $itemData['quantity'],
+                    ]);
+
+                    $keptItemIds[] = $existingItem->id;
+
+                    continue;
+                }
+
+                $createdItem = $worksheet->items()->create([
+                    'billable_item_id' => null,
+                    'item_name_at_time' => trim((string) $itemData['custom_name']),
+                    'price_at_time' => (int) $itemData['custom_price'],
+                    'quantity' => (int) $itemData['quantity'],
                 ]);
+
+                $keptItemIds[] = $createdItem->id;
 
                 continue;
             }
 
-            $billableItem = BillableItem::query()->findOrFail($billableItemId);
+            $billableItemId = (int) $itemData['billable_item_id'];
 
-            $worksheet->items()->create([
+            if (in_array($billableItemId, $handledBillableIds, true)) {
+                continue;
+            }
+
+            $handledBillableIds[] = $billableItemId;
+            $billableItem = BillableItem::query()->findOrFail($billableItemId);
+            $quantity = BillableItemCatalog::allowsMultipleQuantity($billableItem->name)
+                ? (int) $itemData['quantity']
+                : 1;
+            $existingItem = $existingCatalogItems->get($billableItemId);
+
+            if ($existingItem instanceof WorksheetItem) {
+                $existingItem->update([
+                    'quantity' => $quantity,
+                ]);
+
+                $keptItemIds[] = $existingItem->id;
+
+                continue;
+            }
+
+            $createdItem = $worksheet->items()->create([
                 'billable_item_id' => $billableItem->id,
                 'item_name_at_time' => $billableItem->name,
                 'price_at_time' => $billableItem->price,
-                'quantity' => 1,
+                'quantity' => $quantity,
             ]);
+
+            $keptItemIds[] = $createdItem->id;
         }
 
         $deleteQuery = $worksheet->items();
 
-        if ($selectedBillableIds !== []) {
-            $deleteQuery->whereNotIn('billable_item_id', array_unique($selectedBillableIds));
+        if ($keptItemIds !== []) {
+            $deleteQuery->whereNotIn('id', array_unique($keptItemIds));
         }
 
         $deleteQuery->delete();
@@ -241,8 +311,11 @@ class WorksheetController extends Controller
     private function extractFilters(Request $request): array
     {
         $today = now()->toDateString();
-        $fromInput = $request->string('from')->trim()->toString();
-        $toInput = $request->string('to')->trim()->toString();
+        $rawFromInput = $request->string('from')->trim()->toString();
+        $rawToInput = $request->string('to')->trim()->toString();
+        $hasActiveFilter = $rawFromInput !== '' || $rawToInput !== '';
+        $fromInput = $rawFromInput;
+        $toInput = $rawToInput;
 
         if ($fromInput === '') {
             $fromInput = $today;
@@ -265,6 +338,7 @@ class WorksheetController extends Controller
             'to' => $to?->toDateString(),
             'from_display' => $fromInput,
             'to_display' => $toInput,
+            'has_active_filter' => $hasActiveFilter,
         ];
     }
 
@@ -320,6 +394,7 @@ class WorksheetController extends Controller
     private function fetchWorksheets(array $filters, array $sort): Collection
     {
         return Worksheet::query()
+            ->where('user_id', auth()->id())
             ->with(['items.billableItem'])
             ->when($filters['from'], fn ($query, $from) => $query->whereDate('work_date', '>=', $from))
             ->when($filters['to'], fn ($query, $to) => $query->whereDate('work_date', '<=', $to))
@@ -329,6 +404,11 @@ class WorksheetController extends Controller
             ->each(function (Worksheet $worksheet): void {
                 $worksheet->setAttribute('calculated_total', $this->calculator->calculateWorksheetTotal($worksheet));
             });
+    }
+
+    private function ensureOwnedByCurrentUser(Worksheet $worksheet): void
+    {
+        abort_unless((int) $worksheet->user_id === (int) auth()->id(), 404);
     }
 
     private function buildExportFilename(?string $from, ?string $to): string

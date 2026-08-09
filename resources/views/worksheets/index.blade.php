@@ -13,7 +13,7 @@
             ])
 
             @include('worksheets.partials.summary-card', [
-                'label' => 'Napi bevétel (ma)',
+                'label' => 'Mai bevétel',
                 'value' => $dailyTotal,
                 'caption' => 'A mai naphoz tartozó összes rögzített bevétel.',
                 'icon' => 'money',
@@ -22,14 +22,14 @@
 
         <section class="panel-shell overflow-hidden">
             <div class="border-b border-white/10 px-4 py-4 sm:px-5">
-                <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-2.5 sm:gap-3">
                     <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex w-full items-center justify-between gap-3 sm:w-auto sm:flex-wrap sm:justify-start">
                             <h1 class="section-title">Munkalapok</h1>
                             <a href="{{ route('worksheets.create', ['redirect_to' => url()->current()]) }}" class="btn-primary btn-compact">+ Új munkalap</a>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                        <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
                             <form method="POST" action="{{ route('worksheets.reset') }}">
                                 @csrf
                                 <button type="submit" class="btn-text">Reset</button>
@@ -51,29 +51,63 @@
                         </div>
                     </div>
 
-                    <form method="GET" action="{{ route('worksheets.index') }}" class="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-                        <div class="grid min-w-0 grid-cols-2 gap-2 sm:min-w-[320px] sm:gap-3 xl:flex-1">
-                            <div class="date-filter-group min-w-0">
+                    <form method="GET" action="{{ route('worksheets.index') }}" class="filter-form-layout">
+                        <div class="filter-date-grid">
+                            <div class="date-filter-group filter-date-group">
                                 <label for="from" class="filter-label">Ettől</label>
-                                <input id="from" name="from" type="date" max="{{ $todayDate }}" class="date-input date-input-native" value="{{ $filterInputs['from'] }}">
+                                <div class="date-picker-shell">
+                                    <span class="date-picker-value" x-text="formatDateLabel($refs.fromDate?.value)"></span>
+                                    <svg viewBox="0 0 24 24" fill="none" class="date-picker-icon" aria-hidden="true">
+                                        <path d="M7 3V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M17 3V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M4 9H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                    <input
+                                        x-ref="fromDate"
+                                        id="from"
+                                        name="from"
+                                        type="date"
+                                        max="{{ $todayDate }}"
+                                        class="date-input-overlay js-scroll-blur-control"
+                                        value="{{ $filterInputs['from'] }}"
+                                    >
+                                </div>
                             </div>
 
-                            <div class="date-filter-group min-w-0">
+                            <div class="date-filter-group filter-date-group">
                                 <label for="to" class="filter-label">Eddig</label>
-                                <input id="to" name="to" type="date" max="{{ $todayDate }}" class="date-input date-input-native" value="{{ $filterInputs['to'] }}">
+                                <div class="date-picker-shell">
+                                    <span class="date-picker-value" x-text="formatDateLabel($refs.toDate?.value)"></span>
+                                    <svg viewBox="0 0 24 24" fill="none" class="date-picker-icon" aria-hidden="true">
+                                        <path d="M7 3V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M17 3V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M4 9H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                    <input
+                                        x-ref="toDate"
+                                        id="to"
+                                        name="to"
+                                        type="date"
+                                        max="{{ $todayDate }}"
+                                        class="date-input-overlay js-scroll-blur-control"
+                                        value="{{ $filterInputs['to'] }}"
+                                    >
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-3 xl:flex-nowrap xl:justify-end">
-                            <select id="sort" name="sort" class="select-dark sm:w-[180px] xl:w-[190px]">
+                        <div class="filter-actions-grid">
+                            <select id="sort" name="sort" class="select-dark input-compact filter-sort-select js-scroll-blur-control">
                                 <option value="">Dátum szerint</option>
                                 <option value="date_asc" @selected($sortKey === 'date_asc')>Dátum szerint, régi elöl</option>
                                 <option value="name_asc" @selected($sortKey === 'name_asc')>Munkalap szerint, A-Z</option>
                                 <option value="name_desc" @selected($sortKey === 'name_desc')>Munkalap szerint, Z-A</option>
                             </select>
 
-                            <button type="submit" formaction="{{ route('worksheets.export') }}" class="btn-accent btn-compact sm:self-end">Export XLS</button>
-                            <button type="submit" class="btn-primary btn-compact sm:self-end">Szűrés</button>
+                            <button type="submit" formaction="{{ route('worksheets.export') }}" class="btn-accent btn-compact btn-mobile-tight filter-action-button filter-action-button-mobile">Export XLS</button>
+                            <button type="submit" class="btn-primary btn-compact btn-mobile-tight filter-action-button filter-action-button-mobile">Szűrés</button>
                         </div>
                     </form>
                 </div>
@@ -82,15 +116,15 @@
             @if ($worksheets->isEmpty())
                 <div class="px-6 py-16 text-center">
                     <h2 class="text-lg font-semibold text-white sm:text-xl">Nincs megjeleníthető munkalap</h2>
-                    <p class="mt-2 text-sm text-slate-400">Hozz létre új rekordot, vagy állítsd vissza a szűrőket.</p>
+                    <p class="mt-2 text-sm text-slate-400">Adj hozzá új munkalapot vagy módosítsd a szűrőket.</p>
                 </div>
             @else
                 <div class="overflow-hidden">
                     <table class="worksheet-table">
                         <colgroup>
-                            <col class="w-[58px] sm:w-[108px]">
+                            <col class="w-[50px] sm:w-[108px]">
                             <col>
-                            <col class="w-[76px] sm:w-[108px]">
+                            <col class="w-[68px] sm:w-[108px]">
                         </colgroup>
 
                         <thead>
@@ -124,24 +158,26 @@
 
                                     <td class="worksheet-cell align-top">
                                         <div class="min-w-0 space-y-1">
-                                            <div class="truncate text-[11px] font-semibold leading-4 text-white sm:text-[13px] sm:whitespace-normal sm:break-words">{{ $worksheet->worksheet_number }}</div>
+                                            <div class="truncate text-[9px] font-semibold leading-tight text-white sm:text-[13px] sm:leading-4 sm:whitespace-normal sm:break-words">{{ $worksheet->worksheet_number }}</div>
 
-                                            <div class="flex flex-wrap items-center gap-1 text-[10px] leading-4 text-slate-400">
+                                            <div class="flex flex-wrap items-center gap-1 text-[9px] leading-tight text-slate-400 sm:text-[10px] sm:leading-4">
                                                 @foreach ($worksheet->items as $item)
-                                                    <span class="tag-pill" style="{{ $tagPalette[$item->item_name_at_time] ?? '' }}">{{ $item->item_name_at_time }}</span>
+                                                    <span class="tag-pill" style="{{ $tagPalette[$item->item_name_at_time] ?? '' }}">
+                                                        {{ $item->item_name_at_time }}@if ($item->quantity > 1) x{{ $item->quantity }}@endif
+                                                    </span>
                                                 @endforeach
 
                                                 @if ($worksheet->note)
-                                                    <span class="break-words text-[10px] leading-4 text-slate-400/90">{{ $worksheet->note }}</span>
+                                                    <span class="break-words text-[10px] leading-4 text-slate-400/90">Megj.: {{ $worksheet->note }}</span>
                                                 @endif
                                             </div>
                                         </div>
                                     </td>
 
                                     <td class="worksheet-cell align-top text-right">
-                                        <div class="inline-flex items-baseline gap-1 whitespace-nowrap text-[13px] font-bold leading-4 text-white sm:text-[15px]">
+                                        <div class="inline-flex items-baseline gap-0.5 whitespace-nowrap text-[11px] font-bold leading-4 text-white sm:gap-1 sm:text-[15px]">
                                             <span>{{ number_format($worksheet->calculated_total, 0, ',', ' ') }}</span>
-                                            <span class="text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Ft</span>
+                                            <span class="text-[9px] font-medium uppercase tracking-[0.05em] text-slate-500 sm:text-[10px] sm:tracking-[0.08em]">Ft</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -212,6 +248,19 @@
                     }
 
                     window.location.href = url;
+                },
+                formatDateLabel(value) {
+                    if (!value) {
+                        return '----.--.--';
+                    }
+
+                    const [year, month, day] = value.split('-');
+
+                    if (!year || !month || !day) {
+                        return value;
+                    }
+
+                    return `${year}. ${month}. ${day}.`;
                 },
             }));
         });

@@ -12,7 +12,7 @@
         x-transition:leave-end="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-4"
         class="pointer-events-none fixed inset-x-4 top-4 z-[70] flex justify-center sm:inset-x-auto sm:right-5 sm:top-5 sm:justify-end"
     >
-        <div class="pointer-events-auto w-full max-w-sm rounded-2xl border border-emerald-400/30 bg-[#162638]/95 px-4 py-3 text-sm font-medium text-emerald-100 shadow-[0_18px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        <div class="toast-surface pointer-events-auto w-full max-w-sm rounded-2xl border border-emerald-400/30 bg-[#162638]/95 px-4 py-3 text-sm font-medium text-emerald-100 shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
             {{ session('status') }}
         </div>
     </div>

@@ -8,7 +8,7 @@
             <div class="border-b border-white/10 px-6 py-5">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-violet-300/70">Regisztráció</p>
                 <h1 class="mt-3 text-3xl font-semibold italic tracking-tight text-white">Új fiók létrehozása</h1>
-                <p class="mt-2 text-sm leading-6 text-slate-400">Add meg az adataidat, és a rendszer azonnal be is léptet.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">Regisztrációt követően a rendszer azonnal be is léptet.</p>
             </div>
 
             <form method="POST" action="{{ route('register.store') }}" class="space-y-5 px-6 py-6">

@@ -2,9 +2,15 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WorksheetController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/belepes');
+Route::get('/', function () {
+    return Auth::check()
+        ? redirect()->route('worksheets.index')
+        : redirect()->route('login');
+});
+
 Route::middleware('guest')->group(function (): void {
     Route::get('/belepes', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/regisztracio', [AuthController::class, 'showRegister'])->name('register');
